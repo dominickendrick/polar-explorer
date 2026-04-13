@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:polar_explorer/heart_rate_service.dart';
 
 import 'device_selector.dart';
 
@@ -74,6 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<BluetoothService> _services = [];
   BluetoothService? _bluetoothService;
   BluetoothCharacteristic? _bluetoothCharacteristic;
+  BluetoothService? _heartRateData;
 
   void _updateBluetoothState(bool isOn) {
     setState(() {
@@ -101,6 +103,9 @@ class _MyHomePageState extends State<MyHomePage> {
       _services = await device.discoverServices();
       _bluetoothService = _services.first;
       _bluetoothCharacteristic = _bluetoothService!.characteristics.first;
+      _heartRateData = _services.firstWhere(
+        (service) => service.uuid.toString().toLowerCase().contains("180d"),
+      );
     } catch (e) {
       // TODO: Handle the exception properly, e.g., show a dialog to the user or log the error.
       print(e.toString());
@@ -175,6 +180,10 @@ class _MyHomePageState extends State<MyHomePage> {
               }),
               deviceConnectionState: _connectionState,
               services: _services,
+            ),
+            HeartRateService(
+              heartRateService: _heartRateData,
+              connectionState: _connectionState,
             ),
           ],
         ),
