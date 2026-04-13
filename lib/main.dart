@@ -51,6 +51,58 @@ void main() {
   runApp(const MyApp());
 }
 
+class DeviceSelector extends StatelessWidget {
+  const DeviceSelector({
+    super.key,
+    required this.selectedDevice,
+    required this.onDeviceSelected,
+  });
+
+  final UserBluetoothDevice? selectedDevice;
+  final void Function(UserBluetoothDevice) onDeviceSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    if (selectedDevice != null) {
+      return Column(
+        children: [
+          Text("Selected Device:"),
+          Text(selectedDevice!.deviceName),
+          Text(selectedDevice!.deviceId),
+        ],
+      );
+    }
+    return StreamBuilder<List<ScanResult>>(
+      stream: FlutterBluePlus.scanResults,
+      initialData: const [],
+      builder: (c, snapshot) {
+        List<ScanResult> scanresults = snapshot.data!;
+        List<ScanResult> templist = [];
+        scanresults.forEach((element) {
+          if (element.device.platformName.contains("Polar")) {
+            templist.add(element);
+          }
+        });
+        return Column(
+          children: templist.map((r) {
+            return ListTile(
+              title: Text(r.device.platformName),
+              subtitle: Text(r.device.remoteId.toString()),
+              trailing: Text(r.rssi.toString()),
+              onTap: () => onDeviceSelected(
+                UserBluetoothDevice(
+                  deviceId: r.device.remoteId.toString(),
+                  deviceName: r.device.platformName,
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -130,43 +182,12 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: .center,
           children: [
             BluetoothAdapterStatus(onStateChanged: _updateBluetoothState),
-            if (selectedDeviceId != null)
-              Column(
-                children: [
-                  Text("Selected Device:"),
-                  Text(selectedDeviceId!.deviceName),
-                  Text(selectedDeviceId!.deviceId),
-                ],
-              )
-            else
-              StreamBuilder<List<ScanResult>>(
-                stream: FlutterBluePlus.scanResults,
-                initialData: const [],
-                builder: (c, snapshot) {
-                  List<ScanResult> scanresults = snapshot.data!;
-                  List<ScanResult> templist = [];
-                  scanresults.forEach((element) {
-                    if (element.device.platformName.contains("Polar")) {
-                      templist.add(element);
-                    }
-                  });
-                  return Column(
-                    children: templist.map((r) {
-                      return ListTile(
-                        title: Text(r.device.platformName),
-                        subtitle: Text(r.device.remoteId.toString()),
-                        trailing: Text(r.rssi.toString()),
-                        onTap: () => setState(() {
-                          selectedDeviceId = UserBluetoothDevice(
-                            deviceId: r.device.remoteId.toString(),
-                            deviceName: r.device.platformName,
-                          );
-                        }),
-                      );
-                    }).toList(),
-                  );
-                },
-              ),
+            DeviceSelector(
+              selectedDevice: selectedDeviceId,
+              onDeviceSelected: (device) => setState(() {
+                selectedDeviceId = device;
+              }),
+            ),
           ],
         ),
       ),
