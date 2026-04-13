@@ -92,6 +92,53 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               },
             ),
+            StreamBuilder<bool>(
+              stream: FlutterBluePlus.isScanning,
+              initialData: false,
+              builder: (c, snapshot) {
+                if (snapshot.data!) {
+                  return FloatingActionButton(
+                    child: const Icon(Icons.stop, color: Colors.red),
+                    onPressed: () => FlutterBluePlus.stopScan(),
+                    backgroundColor: Color(0xFFEDEDED),
+                  );
+                } else {
+                  return FloatingActionButton(
+                    child: Icon(Icons.search, color: Colors.blue.shade300),
+                    backgroundColor: Color(0xFFEDEDED),
+                    onPressed: () => FlutterBluePlus.startScan(
+                      timeout: const Duration(seconds: 4),
+                    ),
+                  );
+                }
+              },
+            ),
+            StreamBuilder<List<ScanResult>>(
+              stream: FlutterBluePlus.scanResults,
+              initialData: const [],
+              builder: (c, snapshot) {
+                List<ScanResult> scanresults = snapshot.data!;
+                List<ScanResult> templist = [];
+                scanresults.forEach((element) {
+                  if (element.device.platformName != "") {
+                    templist.add(element);
+                  }
+                });
+                return Column(
+                  children: templist.map((r) {
+                    if (r.device.platformName.contains("Polar")) {
+                      return ListTile(
+                        title: Text(r.device.platformName),
+                        subtitle: Text(r.device.remoteId.toString()),
+                        trailing: Text(r.rssi.toString()),
+                      );
+                    } else {
+                      return Container();
+                    }
+                  }).toList(),
+                );
+              },
+            ),
           ],
         ),
       ),
