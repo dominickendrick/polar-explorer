@@ -121,12 +121,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                   return BluetoothToggle(
                     value: _bluetoothState,
-                    onChanged: (bool value) {
+                    onToggled: (bool value) {
                       setState(() {
-                        _bluetoothState = !_bluetoothState;
-                        if (value) {
-                          FlutterBluePlus.turnOn();
-                        }
+                        _bluetoothState = value;
                       });
                     },
                   );
@@ -147,15 +144,28 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class BluetoothToggle extends StatelessWidget {
+class BluetoothToggle extends StatefulWidget {
   const BluetoothToggle({
     super.key,
     required this.value,
-    required this.onChanged,
+    this.onToggled,
   });
 
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onToggled;
+
+  @override
+  State<BluetoothToggle> createState() => _BluetoothToggleState();
+}
+
+class _BluetoothToggleState extends State<BluetoothToggle> {
+  void _onChanged(bool value) {
+    final newValue = !widget.value;
+    if (newValue) {
+      FlutterBluePlus.turnOn();
+    }
+    widget.onToggled?.call(newValue);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,8 +181,8 @@ class BluetoothToggle extends StatelessWidget {
           "Activate Bluetooth",
           style: TextStyle(fontSize: 14),
         ),
-        value: value,
-        onChanged: onChanged,
+        value: widget.value,
+        onChanged: _onChanged,
       ),
     );
   }
