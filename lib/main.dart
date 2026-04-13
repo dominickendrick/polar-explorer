@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,6 +57,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  bool _bluetoothState = false;
 
   void _incrementCounter() {
     setState(() {
@@ -65,6 +68,21 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+  }
+
+  Future getPermissions() async {
+    try {
+      await Permission.bluetooth.request();
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getPermissions();
   }
 
   @override
@@ -89,25 +107,33 @@ class _MyHomePageState extends State<MyHomePage> {
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: .center,
           children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            Text("Bluetooth State: ${_bluetoothState.toString()}"),
+            StreamBuilder(
+              stream: FlutterBluePlus.adapterState,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  if (snapshot.data == BluetoothAdapterState.on) {
+                    _bluetoothState = true;
+                  } else if (snapshot.data == BluetoothAdapterState.off) {
+                    _bluetoothState = false;
+                  }
+                  return BluetoothToggle(
+                    value: _bluetoothState,
+                    onChanged: (bool value) {
+                      setState(() {
+                        _bluetoothState = !_bluetoothState;
+                        if (value) {
+                          FlutterBluePlus.turnOn();
+                        }
+                      });
+                    },
+                  );
+                } else {
+                  return Container();
+                }
+              },
             ),
           ],
         ),
@@ -116,6 +142,37 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class BluetoothToggle extends StatelessWidget {
+  const BluetoothToggle({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 30,
+      child: SwitchListTile(
+        activeColor: Color(0xFF015164),
+        activeTrackColor: Color(0xFF0291B5),
+        inactiveTrackColor: Colors.grey,
+        inactiveThumbColor: Colors.white,
+        selectedTileColor: Colors.red,
+        title: Text(
+          "Activate Bluetooth",
+          style: TextStyle(fontSize: 14),
+        ),
+        value: value,
+        onChanged: onChanged,
       ),
     );
   }
