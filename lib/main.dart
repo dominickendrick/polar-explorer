@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -31,6 +33,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   bool _bluetoothState = false;
+  Timer? _scanTimer;
 
   void _updateBluetoothState(bool isOn) {
     setState(() {
@@ -47,11 +50,29 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future _startScan() async {
+    if (!(await FlutterBluePlus.isScanning.first)) {
+      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 4));
+    }
+  }
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    getPermissions();
+    getPermissions().then((_) {
+      _startScan();
+      _scanTimer = Timer.periodic(
+        const Duration(seconds: 10),
+        (_) => _startScan(),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _scanTimer?.cancel();
+    FlutterBluePlus.stopScan();
+    super.dispose();
   }
 
   @override
@@ -89,27 +110,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                 } else {
                   return Container();
-                }
-              },
-            ),
-            StreamBuilder<bool>(
-              stream: FlutterBluePlus.isScanning,
-              initialData: false,
-              builder: (c, snapshot) {
-                if (snapshot.data!) {
-                  return FloatingActionButton(
-                    child: const Icon(Icons.stop, color: Colors.red),
-                    onPressed: () => FlutterBluePlus.stopScan(),
-                    backgroundColor: Color(0xFFEDEDED),
-                  );
-                } else {
-                  return FloatingActionButton(
-                    child: Icon(Icons.search, color: Colors.blue.shade300),
-                    backgroundColor: Color(0xFFEDEDED),
-                    onPressed: () => FlutterBluePlus.startScan(
-                      timeout: const Duration(seconds: 4),
-                    ),
-                  );
                 }
               },
             ),
