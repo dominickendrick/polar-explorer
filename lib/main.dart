@@ -4,12 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class UserBluetoothDevice {
-  final String deviceId;
-  final String deviceName;
-
-  UserBluetoothDevice({required this.deviceId, required this.deviceName});
-}
+import 'device_selector.dart';
 
 class BluetoothAdapterStatus extends StatelessWidget {
   const BluetoothAdapterStatus({super.key, required this.onStateChanged});
@@ -35,9 +30,7 @@ class BluetoothAdapterStatus extends StatelessWidget {
           if (isOn) {
             return Text("Bluetooth on");
           } else {
-            return Text(
-              "Bluetooth off, please turn on Bluetooth to continue",
-            );
+            return Text("Bluetooth off, please turn on Bluetooth to continue");
           }
         } else {
           return Container();
@@ -49,58 +42,6 @@ class BluetoothAdapterStatus extends StatelessWidget {
 
 void main() {
   runApp(const MyApp());
-}
-
-class DeviceSelector extends StatelessWidget {
-  const DeviceSelector({
-    super.key,
-    required this.selectedDevice,
-    required this.onDeviceSelected,
-  });
-
-  final UserBluetoothDevice? selectedDevice;
-  final void Function(UserBluetoothDevice) onDeviceSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    if (selectedDevice != null) {
-      return Column(
-        children: [
-          Text("Selected Device:"),
-          Text(selectedDevice!.deviceName),
-          Text(selectedDevice!.deviceId),
-        ],
-      );
-    }
-    return StreamBuilder<List<ScanResult>>(
-      stream: FlutterBluePlus.scanResults,
-      initialData: const [],
-      builder: (c, snapshot) {
-        List<ScanResult> scanresults = snapshot.data!;
-        List<ScanResult> templist = [];
-        scanresults.forEach((element) {
-          if (element.device.platformName.contains("Polar")) {
-            templist.add(element);
-          }
-        });
-        return Column(
-          children: templist.map((r) {
-            return ListTile(
-              title: Text(r.device.platformName),
-              subtitle: Text(r.device.remoteId.toString()),
-              trailing: Text(r.rssi.toString()),
-              onTap: () => onDeviceSelected(
-                UserBluetoothDevice(
-                  deviceId: r.device.remoteId.toString(),
-                  deviceName: r.device.platformName,
-                ),
-              ),
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -128,7 +69,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   bool _bluetoothState = false;
   UserBluetoothDevice? selectedDeviceId;
+  BluetoothConnectionState? _connectionState;
   Timer? _scanTimer;
+  List<BluetoothService> _services = [];
+  BluetoothService? _bluetoothService;
+  BluetoothCharacteristic? _bluetoothCharacteristic;
 
   void _updateBluetoothState(bool isOn) {
     setState(() {
@@ -151,15 +96,56 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future _getServices(BluetoothDevice device) async {
+    try {
+      _services = await device.discoverServices();
+      _bluetoothService = _services.first;
+      _bluetoothCharacteristic = _bluetoothService!.characteristics.first;
+    } catch (e) {
+      // TODO: Handle the exception properly, e.g., show a dialog to the user or log the error.
+      print(e.toString());
+    }
+  }
+
+  Future _connectionStateStream(BluetoothDevice device) async {
+    try {
+      await device
+          .connect(license: License.free)
+          .then((value) {
+            device.connectionState.listen((event) async {
+              setState(() {
+                if (event == BluetoothConnectionState.connected) {
+                  _connectionState = BluetoothConnectionState.connected;
+                } else if (event == BluetoothConnectionState.disconnected) {
+                  _connectionState = BluetoothConnectionState.disconnected;
+                } else {
+                  _connectionState = null;
+                }
+              });
+            });
+          })
+          .catchError((e) {
+            // TODO: Handle the exception properly, e.g., show a dialog to the user or log the error.
+            print(e.toString());
+          });
+    } catch (e) {
+      // TODO: Handle the exception properly, e.g., show a dialog to the user or log the error.
+      print(e.toString());
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     getPermissions().then((_) {
       _startScan();
-      _scanTimer = Timer.periodic(
-        const Duration(seconds: 10),
-        (_) => _startScan(),
-      );
+      _scanTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        _startScan();
+        if (selectedDeviceId != null && selectedDeviceId!.device != null) {
+          _connectionStateStream(selectedDeviceId!.device!);
+          _getServices(selectedDeviceId!.device!);
+        }
+      });
     });
   }
 
@@ -187,6 +173,8 @@ class _MyHomePageState extends State<MyHomePage> {
               onDeviceSelected: (device) => setState(() {
                 selectedDeviceId = device;
               }),
+              deviceConnectionState: _connectionState,
+              services: _services,
             ),
           ],
         ),
