@@ -4,6 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+class UserBluetoothDevice {
+  final String deviceId;
+  final String deviceName;
+
+  UserBluetoothDevice({required this.deviceId, required this.deviceName});
+}
+
 void main() {
   runApp(const MyApp());
 }
@@ -31,9 +38,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   bool _bluetoothState = false;
-  String? selectedDeviceId;
+  UserBluetoothDevice? selectedDeviceId;
   Timer? _scanTimer;
 
   void _updateBluetoothState(bool isOn) {
@@ -87,7 +93,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: .center,
           children: [
-            Text("Bluetooth State: ${_bluetoothState.toString()}"),
             StreamBuilder(
               stream: FlutterBluePlus.adapterState.handleError((e) {
                 // TODO: Handle the error properly, e.g., show a dialog to the user or log the error.
@@ -115,7 +120,13 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             if (selectedDeviceId != null)
-              Text(selectedDeviceId!)
+              Column(
+                children: [
+                  Text("Selected Device:"),
+                  Text(selectedDeviceId!.deviceName),
+                  Text(selectedDeviceId!.deviceId),
+                ],
+              )
             else
               StreamBuilder<List<ScanResult>>(
                 stream: FlutterBluePlus.scanResults,
@@ -136,7 +147,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           subtitle: Text(r.device.remoteId.toString()),
                           trailing: Text(r.rssi.toString()),
                           onTap: () => setState(() {
-                            selectedDeviceId = r.device.remoteId.toString();
+                            selectedDeviceId = UserBluetoothDevice(
+                              deviceId: r.device.remoteId.toString(),
+                              deviceName: r.device.platformName,
+                            );
                           }),
                         );
                       } else {
