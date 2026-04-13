@@ -11,6 +11,42 @@ class UserBluetoothDevice {
   UserBluetoothDevice({required this.deviceId, required this.deviceName});
 }
 
+class BluetoothAdapterStatus extends StatelessWidget {
+  const BluetoothAdapterStatus({super.key, required this.onStateChanged});
+
+  final void Function(bool isOn) onStateChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: FlutterBluePlus.adapterState.handleError((e) {
+        // TODO: Handle the error properly, e.g., show a dialog to the user or log the error.
+        print(e.toString());
+      }),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text("Bluetooth unavailable");
+        }
+        if (snapshot.hasData) {
+          final isOn = snapshot.data == BluetoothAdapterState.on;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            onStateChanged(isOn);
+          });
+          if (isOn) {
+            return Text("Bluetooth on");
+          } else {
+            return Text(
+              "Bluetooth off, please turn on Bluetooth to continue",
+            );
+          }
+        } else {
+          return Container();
+        }
+      },
+    );
+  }
+}
+
 void main() {
   runApp(const MyApp());
 }
@@ -93,32 +129,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: .center,
           children: [
-            StreamBuilder(
-              stream: FlutterBluePlus.adapterState.handleError((e) {
-                // TODO: Handle the error properly, e.g., show a dialog to the user or log the error.
-                print(e.toString());
-              }),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Text("Bluetooth unavailable");
-                }
-                if (snapshot.hasData) {
-                  final isOn = snapshot.data == BluetoothAdapterState.on;
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _updateBluetoothState(isOn);
-                  });
-                  if (isOn) {
-                    return Text("Bluetooth on");
-                  } else {
-                    return Text(
-                      "Bluetooth off, please turn on Bluetooth to continue",
-                    );
-                  }
-                } else {
-                  return Container();
-                }
-              },
-            ),
+            BluetoothAdapterStatus(onStateChanged: _updateBluetoothState),
             if (selectedDeviceId != null)
               Column(
                 children: [
