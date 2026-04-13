@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Polar Explorer',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -70,10 +70,17 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _updateBluetoothState(bool isOn) {
+    setState(() {
+      _bluetoothState = isOn;
+    });
+  }
+
   Future getPermissions() async {
     try {
       await Permission.bluetooth.request();
     } catch (e) {
+      // TODO: Handle the exception properly, e.g., show a dialog to the user or log the error.
       print(e.toString());
     }
   }
@@ -87,46 +94,36 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
           mainAxisAlignment: .center,
           children: [
             Text("Bluetooth State: ${_bluetoothState.toString()}"),
             StreamBuilder(
-              stream: FlutterBluePlus.adapterState,
+              stream: FlutterBluePlus.adapterState.handleError((e) {
+                print(e.toString());
+              }),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Text("Bluetooth unavailable");
+                }
                 if (snapshot.hasData) {
-                  if (snapshot.data == BluetoothAdapterState.on) {
-                    _bluetoothState = true;
-                  } else if (snapshot.data == BluetoothAdapterState.off) {
-                    _bluetoothState = false;
+                  final isOn = snapshot.data == BluetoothAdapterState.on;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _updateBluetoothState(isOn);
+                  });
+                  if (isOn) {
+                    return Text("Bluetooth on");
+                  } else {
+                    return Text(
+                      "Bluetooth off, please turn on Bluetooth to continue",
+                    );
                   }
-                  return BluetoothToggle(
-                    value: _bluetoothState,
-                    onToggled: (bool value) {
-                      setState(() {
-                        _bluetoothState = value;
-                      });
-                    },
-                  );
                 } else {
                   return Container();
                 }
@@ -139,50 +136,6 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class BluetoothToggle extends StatefulWidget {
-  const BluetoothToggle({
-    super.key,
-    required this.value,
-    this.onToggled,
-  });
-
-  final bool value;
-  final ValueChanged<bool>? onToggled;
-
-  @override
-  State<BluetoothToggle> createState() => _BluetoothToggleState();
-}
-
-class _BluetoothToggleState extends State<BluetoothToggle> {
-  void _onChanged(bool value) {
-    final newValue = !widget.value;
-    if (newValue) {
-      FlutterBluePlus.turnOn();
-    }
-    widget.onToggled?.call(newValue);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 30,
-      child: SwitchListTile(
-        activeColor: Color(0xFF015164),
-        activeTrackColor: Color(0xFF0291B5),
-        inactiveTrackColor: Colors.grey,
-        inactiveThumbColor: Colors.white,
-        selectedTileColor: Colors.red,
-        title: Text(
-          "Activate Bluetooth",
-          style: TextStyle(fontSize: 14),
-        ),
-        value: widget.value,
-        onChanged: _onChanged,
       ),
     );
   }
