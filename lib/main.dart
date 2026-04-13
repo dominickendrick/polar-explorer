@@ -33,6 +33,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   bool _bluetoothState = false;
+  String? selectedDeviceId;
   Timer? _scanTimer;
 
   void _updateBluetoothState(bool isOn) {
@@ -113,32 +114,38 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               },
             ),
-            StreamBuilder<List<ScanResult>>(
-              stream: FlutterBluePlus.scanResults,
-              initialData: const [],
-              builder: (c, snapshot) {
-                List<ScanResult> scanresults = snapshot.data!;
-                List<ScanResult> templist = [];
-                scanresults.forEach((element) {
-                  if (element.device.platformName != "") {
-                    templist.add(element);
-                  }
-                });
-                return Column(
-                  children: templist.map((r) {
-                    if (r.device.platformName.contains("Polar")) {
-                      return ListTile(
-                        title: Text(r.device.platformName),
-                        subtitle: Text(r.device.remoteId.toString()),
-                        trailing: Text(r.rssi.toString()),
-                      );
-                    } else {
-                      return Container();
+            if (selectedDeviceId != null)
+              Text(selectedDeviceId!)
+            else
+              StreamBuilder<List<ScanResult>>(
+                stream: FlutterBluePlus.scanResults,
+                initialData: const [],
+                builder: (c, snapshot) {
+                  List<ScanResult> scanresults = snapshot.data!;
+                  List<ScanResult> templist = [];
+                  scanresults.forEach((element) {
+                    if (element.device.platformName != "") {
+                      templist.add(element);
                     }
-                  }).toList(),
-                );
-              },
-            ),
+                  });
+                  return Column(
+                    children: templist.map((r) {
+                      if (r.device.platformName.contains("Polar")) {
+                        return ListTile(
+                          title: Text(r.device.platformName),
+                          subtitle: Text(r.device.remoteId.toString()),
+                          trailing: Text(r.rssi.toString()),
+                          onTap: () => setState(() {
+                            selectedDeviceId = r.device.remoteId.toString();
+                          }),
+                        );
+                      } else {
+                        return Container();
+                      }
+                    }).toList(),
+                  );
+                },
+              ),
           ],
         ),
       ),
