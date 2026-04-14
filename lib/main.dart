@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:polar_explorer/heart_rate_service.dart';
 
 import 'device_selector.dart';
+import 'device_selector_view_model.dart';
 
 class BluetoothAdapterStatus extends StatelessWidget {
   const BluetoothAdapterStatus({super.key, required this.onStateChanged});
@@ -76,6 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothService? _bluetoothService;
   BluetoothCharacteristic? _bluetoothCharacteristic;
   BluetoothService? _heartRateData;
+  late DeviceSelectorViewModel _deviceSelectorViewModel;
 
   void _updateBluetoothState(bool isOn) {
     setState(() {
@@ -106,6 +108,10 @@ class _MyHomePageState extends State<MyHomePage> {
       _heartRateData = _services.firstWhere(
         (service) => service.uuid.toString().toLowerCase().contains("180d"),
       );
+      _deviceSelectorViewModel.updateDeviceState(
+        connectionState: _connectionState,
+        services: _services,
+      );
     } catch (e) {
       // TODO: Handle the exception properly, e.g., show a dialog to the user or log the error.
       print(e.toString());
@@ -127,6 +133,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   _connectionState = null;
                 }
               });
+              _deviceSelectorViewModel.updateDeviceState(
+                connectionState: _connectionState,
+                services: _services,
+              );
             });
           })
           .catchError((e) {
@@ -142,6 +152,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    _deviceSelectorViewModel = DeviceSelectorViewModel();
+    _deviceSelectorViewModel.init();
     getPermissions().then((_) {
       _startScan();
       _scanTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -157,6 +169,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     _scanTimer?.cancel();
+    _deviceSelectorViewModel.dispose();
     FlutterBluePlus.stopScan();
     super.dispose();
   }
@@ -174,12 +187,10 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             BluetoothAdapterStatus(onStateChanged: _updateBluetoothState),
             DeviceSelector(
-              selectedDevice: selectedDeviceId,
+              viewModel: _deviceSelectorViewModel,
               onDeviceSelected: (device) => setState(() {
                 selectedDeviceId = device;
               }),
-              deviceConnectionState: _connectionState,
-              services: _services,
             ),
             HeartRateService(
               heartRateService: _heartRateData,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+import 'device_selector_view_model.dart';
+
 class UserBluetoothDevice {
   final String deviceId;
   final String deviceName;
@@ -15,66 +17,65 @@ class UserBluetoothDevice {
   });
 }
 
-class DeviceSelector extends StatelessWidget {
+class DeviceSelector extends StatefulWidget {
   const DeviceSelector({
     super.key,
-    required this.selectedDevice,
+    required this.viewModel,
     required this.onDeviceSelected,
-    required this.deviceConnectionState,
-    required this.services,
   });
 
-  final UserBluetoothDevice? selectedDevice;
+  final DeviceSelectorViewModel viewModel;
   final void Function(UserBluetoothDevice) onDeviceSelected;
-  final BluetoothConnectionState? deviceConnectionState;
-  final List<BluetoothService> services;
 
   @override
+  State<DeviceSelector> createState() => _DeviceSelectorState();
+}
+
+class _DeviceSelectorState extends State<DeviceSelector> {
+  @override
   Widget build(BuildContext context) {
-    if (selectedDevice != null) {
-      return Column(
-        children: [
-          Text("Selected Device:"),
-          Text(selectedDevice!.deviceName),
-          Text(selectedDevice!.deviceId),
-          Text(
-            "Connection State: ${deviceConnectionState.toString().split('.').last}",
-          ),
-          Text(
-            "Services: ${services.map((s) => s.uuid.toString()).join(', ')}",
-          ),
-        ],
-      );
-    }
-    return StreamBuilder<List<ScanResult>>(
-      stream: FlutterBluePlus.scanResults,
-      initialData: const [],
-      builder: (c, snapshot) {
-        List<ScanResult> scanresults = snapshot.data!;
-        List<ScanResult> templist = [];
-        scanresults.forEach((element) {
-          if (element.device.platformName.contains("Polar")) {
-            templist.add(element);
-          }
-        });
-        return Column(
-          children: templist.map((r) {
-            return ListTile(
-              title: Text(r.device.platformName),
-              subtitle: Text(r.device.remoteId.toString()),
-              trailing: Text(r.rssi.toString()),
-              onTap: () => onDeviceSelected(
-                UserBluetoothDevice(
-                  deviceId: r.device.remoteId.toString(),
-                  deviceName: r.device.platformName,
-                  device: r.device,
-                  connectionState: r.device.connectionState,
-                ),
-              ),
-            );
-          }).toList(),
-        );
+    return ListenableBuilder(
+      listenable: widget.viewModel,
+      builder: (context, _) {
+        return switch (widget.viewModel.status) {
+          DeviceSelectorStatus.deviceSelected => _buildSelectedDevice(),
+          DeviceSelectorStatus.scanning => _buildScanResults(),
+        };
       },
+    );
+  }
+
+  Widget _buildSelectedDevice() {
+    final vm = widget.viewModel;
+    return Column(
+      children: [
+        Text("Selected Device:"),
+        Text(vm.selectedDevice!.deviceName),
+        Text(vm.selectedDevice!.deviceId),
+        Text(
+          "Connection State: ${vm.connectionState.toString().split('.').last}",
+        ),
+        Text(
+          "Services: ${vm.services.map((s) => s.uuid.toString()).join(', ')}",
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScanResults() {
+    final results = widget.viewModel.scanResults;
+    return Column(
+      children: results.map((r) {
+        return ListTile(
+          title: Text(r.device.platformName),
+          subtitle: Text(r.device.remoteId.toString()),
+          trailing: Text(r.rssi.toString()),
+          onTap: () {
+            widget.viewModel.selectDevice(r);
+            widget.onDeviceSelected(widget.viewModel.selectedDevice!);
+          },
+        );
+      }).toList(),
     );
   }
 }
