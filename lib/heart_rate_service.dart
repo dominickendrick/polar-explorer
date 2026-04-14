@@ -48,7 +48,15 @@ class _HeartRateServiceState extends State<HeartRateService> {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: _viewModel,
-      builder: (context, _) => Text(_viewModel.statusText),
+      builder: (context, _) {
+        return switch (_viewModel.status) {
+          HeartRateStatus.disconnected => Text("Not connected to a device."),
+          HeartRateStatus.serviceNotFound =>
+            Text("Heart Rate Service not found on the device."),
+          HeartRateStatus.monitoring =>
+            Text("Heart Rate: ${_viewModel.heartRate ?? '-'} bpm"),
+        };
+      },
     );
   }
 }

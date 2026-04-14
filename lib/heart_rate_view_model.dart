@@ -3,6 +3,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+enum HeartRateStatus {
+  disconnected,
+  serviceNotFound,
+  monitoring,
+}
+
 class HeartRateViewModel extends ChangeNotifier {
   int? _heartRate;
   BluetoothConnectionState? _connectionState;
@@ -12,15 +18,14 @@ class HeartRateViewModel extends ChangeNotifier {
 
   int? get heartRate => _heartRate;
 
-  String get statusText {
+  HeartRateStatus get status {
     if (_connectionState != BluetoothConnectionState.connected) {
-      return "Not connected to a device.";
+      return HeartRateStatus.disconnected;
     }
     if (_service == null) {
-      return "Heart Rate Service not found on the device.";
+      return HeartRateStatus.serviceNotFound;
     }
-
-    return "Heart Rate: $_heartRate bpm";
+    return HeartRateStatus.monitoring;
   }
 
   Future<void> update({
