@@ -136,17 +136,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               )
             else ...[
-              BluetoothAdapterStatus(
-                onStateChanged: _viewModel.updateBluetoothState,
-              ),
-              DeviceSelector(
-                viewModel: _viewModel.deviceSelectorViewModel,
-                onDeviceSelected: _viewModel.selectDevice,
-              ),
-              HeartRateService(
-                heartRateService: _viewModel.heartRateData,
-                connectionState: _viewModel.connectionState,
-              ),
+              switch (_viewModel.appConnectionState) {
+                AppConnectionState.bluetoothOff => BluetoothAdapterStatus(
+                  onStateChanged: _viewModel.updateBluetoothState,
+                ),
+                AppConnectionState.scanningForDevices => DeviceSelector(
+                  viewModel: _viewModel.deviceSelectorViewModel,
+                  onDeviceSelected: _viewModel.selectDevice,
+                ),
+                AppConnectionState.deviceSelectedNotConnected => DeviceSelector(
+                  viewModel: _viewModel.deviceSelectorViewModel,
+                  onDeviceSelected: _viewModel.selectDevice,
+                ),
+                AppConnectionState.heartRateServiceAvailable =>
+                  HeartRateService(
+                    heartRateService: _viewModel.heartRateData,
+                    connectionState: _viewModel.connectionState,
+                  ),
+              },
             ],
           ];
           return Center(
