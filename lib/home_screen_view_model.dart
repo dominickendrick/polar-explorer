@@ -15,6 +15,13 @@ enum AppErrorType {
   scanning,
 }
 
+enum AppConnectionState {
+  bluetoothOff,
+  scanningForDevices,
+  deviceSelectedNotConnected,
+  heartRateServiceAvailable,
+}
+
 class AppError {
   final AppErrorType type;
   final String message;
@@ -53,6 +60,19 @@ class HomeScreenViewModel extends ChangeNotifier {
   AppError? get currentError => _currentError;
   bool get isLoading => _isLoading;
   bool get hasError => _currentError != null;
+
+  AppConnectionState get appConnectionState {
+    if (!_bluetoothState) {
+      return AppConnectionState.bluetoothOff;
+    }
+    if (_selectedDeviceId == null) {
+      return AppConnectionState.scanningForDevices;
+    }
+    if (_heartRateData == null) {
+      return AppConnectionState.deviceSelectedNotConnected;
+    }
+    return AppConnectionState.heartRateServiceAvailable;
+  }
 
   void _setError(AppError error) {
     _currentError = error;

@@ -3,6 +3,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:polar_explorer/heart_rate_service.dart';
 
 import 'device_selector.dart';
+import 'error_banner.dart';
 import 'home_screen_view_model.dart';
 
 class BluetoothAdapterStatus extends StatelessWidget {
@@ -114,65 +115,42 @@ class _HomeScreenState extends State<HomeScreen> {
       body: ListenableBuilder(
         listenable: _viewModel,
         builder: (context, _) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: .center,
-              children: [
-                // Error banner
-                if (_viewModel.hasError)
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade700,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.error, color: Colors.white),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _viewModel.currentError!.message,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          onPressed: _viewModel.clearError,
-                        ),
-                      ],
-                    ),
-                  ),
+          var children = [
+            // Error banner
+            if (_viewModel.hasError)
+              ErrorBanner(
+                message: _viewModel.currentError!.message,
+                onDismiss: _viewModel.clearError,
+              ),
 
-                // Loading indicator
-                if (_viewModel.isLoading)
-                  const Column(
-                    children: [
-                      CircularProgressIndicator(color: Colors.white),
-                      SizedBox(height: 16),
-                      Text(
-                        'Initializing...',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  )
-                else ...[
-                  BluetoothAdapterStatus(
-                    onStateChanged: _viewModel.updateBluetoothState,
-                  ),
-                  DeviceSelector(
-                    viewModel: _viewModel.deviceSelectorViewModel,
-                    onDeviceSelected: _viewModel.selectDevice,
-                  ),
-                  HeartRateService(
-                    heartRateService: _viewModel.heartRateData,
-                    connectionState: _viewModel.connectionState,
+            // Loading indicator
+            if (_viewModel.isLoading)
+              const Column(
+                children: [
+                  CircularProgressIndicator(color: Colors.white),
+                  SizedBox(height: 16),
+                  Text(
+                    'Initializing...',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ],
-              ],
-            ),
+              )
+            else ...[
+              BluetoothAdapterStatus(
+                onStateChanged: _viewModel.updateBluetoothState,
+              ),
+              DeviceSelector(
+                viewModel: _viewModel.deviceSelectorViewModel,
+                onDeviceSelected: _viewModel.selectDevice,
+              ),
+              HeartRateService(
+                heartRateService: _viewModel.heartRateData,
+                connectionState: _viewModel.connectionState,
+              ),
+            ],
+          ];
+          return Center(
+            child: Column(mainAxisAlignment: .center, children: children),
           );
         },
       ),
