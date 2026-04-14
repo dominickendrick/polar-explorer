@@ -118,17 +118,59 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: .center,
               children: [
-                BluetoothAdapterStatus(
-                  onStateChanged: _viewModel.updateBluetoothState,
-                ),
-                DeviceSelector(
-                  viewModel: _viewModel.deviceSelectorViewModel,
-                  onDeviceSelected: _viewModel.selectDevice,
-                ),
-                HeartRateService(
-                  heartRateService: _viewModel.heartRateData,
-                  connectionState: _viewModel.connectionState,
-                ),
+                // Error banner
+                if (_viewModel.hasError)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade700,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _viewModel.currentError!.message,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: _viewModel.clearError,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Loading indicator
+                if (_viewModel.isLoading)
+                  const Column(
+                    children: [
+                      CircularProgressIndicator(color: Colors.white),
+                      SizedBox(height: 16),
+                      Text(
+                        'Initializing...',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  )
+                else ...[
+                  BluetoothAdapterStatus(
+                    onStateChanged: _viewModel.updateBluetoothState,
+                  ),
+                  DeviceSelector(
+                    viewModel: _viewModel.deviceSelectorViewModel,
+                    onDeviceSelected: _viewModel.selectDevice,
+                  ),
+                  HeartRateService(
+                    heartRateService: _viewModel.heartRateData,
+                    connectionState: _viewModel.connectionState,
+                  ),
+                ],
               ],
             ),
           );
