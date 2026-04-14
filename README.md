@@ -23,7 +23,7 @@ A Flutter application for connecting to Polar heart rate monitors and tracking r
 
 1. Clone the repository
 2. Run `flutter pub get` to install dependencies
-3. Connect your device and run `flutter run`
+3. Connect your device and run `flutter run` - Note this needs to run on a physical device that supports bluetooth
 
 ## Permissions
 
