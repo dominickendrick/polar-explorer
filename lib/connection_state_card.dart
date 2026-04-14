@@ -9,7 +9,7 @@ class ConnectionStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textHeight = DefaultTextStyle.of(context).style.fontSize ?? 14;
-    final twoRowsHeight = textHeight * 2 * 1.5; // 2 rows with 1.5 line height
+    final twoRowsHeight = textHeight * 4;
 
     return Container(
       width: double.infinity,
@@ -26,6 +26,7 @@ class ConnectionStateCard extends StatelessWidget {
           SvgPicture.asset('assets/icons/pair_band.svg', width: 40, height: 40),
           const SizedBox(width: 16),
           Expanded(child: child),
+          const Icon(Icons.chevron_right, color: Colors.white, size: 24),
         ],
       ),
     );

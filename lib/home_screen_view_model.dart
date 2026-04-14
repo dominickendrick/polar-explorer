@@ -109,7 +109,10 @@ class HomeScreenViewModel extends ChangeNotifier {
             if (_selectedDeviceId != null &&
                 _selectedDeviceId!.device != null) {
               _connectionStateStream(_selectedDeviceId!.device!);
-              _getServices(_selectedDeviceId!.device!);
+              // Only discover services if connected
+              if (_connectionState == BluetoothConnectionState.connected) {
+                _getServices(_selectedDeviceId!.device!);
+              }
             }
           });
           _setLoading(false);
@@ -181,26 +184,29 @@ class HomeScreenViewModel extends ChangeNotifier {
   }
 
   Future<void> _getServices(BluetoothDevice device) async {
-    _clearError();
-    _services = await device.discoverServices();
-    _bluetoothService = _services.first;
-    _bluetoothCharacteristic = _bluetoothService!.characteristics.first;
-
     try {
-      _heartRateData = _services.firstWhere(
-        (service) => service.uuid.toString().toLowerCase().contains("180d"),
-      );
-    } catch (e) {
-      // Heart rate service not found, which is okay for some devices
-      _heartRateData = null;
-    }
+      _clearError();
+      _services = await device.discoverServices();
+      _bluetoothService = _services.first;
+      _bluetoothCharacteristic = _bluetoothService!.characteristics.first;
 
-    _deviceSelectorViewModel.updateDeviceState(
-      connectionState: _connectionState,
-      services: _services,
-    );
-    notifyListeners();
-    // Happy to swallow any errors here since service discovery can fail for various reasons and we don't want to crash the app
+      try {
+        _heartRateData = _services.firstWhere(
+          (service) => service.uuid.toString().toLowerCase().contains("180d"),
+        );
+      } catch (e) {
+        // Heart rate service not found, which is okay for some devices
+        _heartRateData = null;
+      }
+
+      _deviceSelectorViewModel.updateDeviceState(
+        connectionState: _connectionState,
+        services: _services,
+      );
+      notifyListeners();
+    } catch (e) {
+      // Service discovery can fail if device disconnects, ignore silently
+    }
   }
 
   Future<void> _connectionStateStream(BluetoothDevice device) async {

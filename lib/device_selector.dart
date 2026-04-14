@@ -61,8 +61,7 @@ class _DeviceSelectorState extends State<DeviceSelector> {
     return Column(
       children: results.map((r) {
         return ListTile(
-          title: Text(_parseDeviceName(r.device.platformName)),
-          subtitle: Text("Polar device found - tap to connect"),
+          title: Text("Pair your band"),
           onTap: () {
             widget.viewModel.selectDevice(r);
             widget.onDeviceSelected(widget.viewModel.selectedDevice!);
