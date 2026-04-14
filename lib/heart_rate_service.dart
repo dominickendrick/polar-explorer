@@ -58,18 +58,10 @@ class _HeartRateServiceState extends State<HeartRateService> {
         stream: _characteristic!.lastValueStream,
         builder: (context, snapshot) {
           if (snapshot.hasData && snapshot.data!.length >= 2) {
-            final data = snapshot.data!;
-            int heartRate;
-            if ((data[0] & 0x01) == 0) {
-              // Heart Rate is in the second byte
-              heartRate = data[1];
-            } else {
-              // Heart Rate is in the second and third bytes
-              heartRate = (data[1] << 8) | data[2];
-            }
+            final heartRate = _parseHeartRate(snapshot.data!);
             return Text("Heart Rate: $heartRate bpm");
           } else {
-            return Text("Waiting for heart rate data...");
+            return Text("-");
           }
         },
       );
@@ -79,4 +71,29 @@ class _HeartRateServiceState extends State<HeartRateService> {
       return Text("Not connected to a device.");
     }
   }
+}
+
+int _parseHeartRate(List<int>? data) {
+  if (data == null) return 0;
+  int heartRate;
+  // Bit 0 of the flags byte indicates heart rate value format:
+  // 0 = UINT8 (single byte), 1 = UINT16 (two bytes)
+  // data[0] & 0x01 is a bitwise AND — it masks all bits except bit 0 (the least significant bit). So it isolates just that single bit from the flags byte.
+
+  // For example, if `data[0]` is `22` (binary `00010110`):
+
+  //  `00010110`
+  //`& 00000001`
+  // ----------
+  //   00000000  → result is 0
+
+  // The `== 0` check then determines which branch to take: if bit 0 is `0`, the heart rate is a single byte; if it's 1, it's two bytes.
+  if ((data[0] & 0x01) == 0) {
+    // Heart Rate is in the second byte
+    heartRate = data[1];
+  } else {
+    // Heart Rate is in the second and third bytes
+    heartRate = (data[1] << 8) | data[2];
+  }
+  return heartRate;
 }
