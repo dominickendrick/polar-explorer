@@ -5,6 +5,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 enum HeartRateStatus { disconnected, serviceNotFound, monitoring }
 
+enum HeartRateZone { resting, active, exertion }
+
 class HeartRateViewModel extends ChangeNotifier {
   int? _heartRate;
   BluetoothConnectionState? _connectionState;
@@ -13,6 +15,14 @@ class HeartRateViewModel extends ChangeNotifier {
   StreamSubscription<List<int>>? _heartRateStreamSubscription;
 
   int? get heartRate => _heartRate;
+
+  HeartRateZone? get zone {
+    final hr = _heartRate;
+    if (hr == null) return null;
+    if (hr < 60) return HeartRateZone.resting;
+    if (hr < 80) return HeartRateZone.active;
+    return HeartRateZone.exertion;
+  }
 
   HeartRateStatus get status {
     if (_connectionState != BluetoothConnectionState.connected) {

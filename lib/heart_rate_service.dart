@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import 'heart_rate_view_model.dart';
+import 'zone_indicator.dart';
 
 class HeartRateService extends StatefulWidget {
   const HeartRateService({
@@ -44,18 +45,71 @@ class _HeartRateServiceState extends State<HeartRateService> {
     super.dispose();
   }
 
+  String _formatZoneName(HeartRateZone? zone) {
+    if (zone == null) return '- -';
+    final name = zone.name;
+    return name[0].toUpperCase() + name.substring(1).toLowerCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: _viewModel,
       builder: (context, _) {
-        return switch (_viewModel.status) {
-          HeartRateStatus.disconnected => Text("Not connected to a device."),
-          HeartRateStatus.serviceNotFound =>
-            Text("Heart Rate Service not found on the device."),
-          HeartRateStatus.monitoring =>
-            Text("Heart Rate: ${_viewModel.heartRate ?? '-'} bpm"),
-        };
+        final heartRate = _viewModel.heartRate;
+        final displayValue = heartRate != null ? heartRate.toString() : '- -';
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top row: Current zone + pill + chevron
+            Row(
+              children: [
+                const Text(
+                  'Current zone',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  _formatZoneName(_viewModel.zone),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const Spacer(),
+                const Icon(Icons.chevron_right, color: Colors.white, size: 24),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Bottom row: Heart rate + bpm + zone bars
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                SizedBox(
+                  width: 40,
+                  child: Text(
+                    displayValue,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    'bpm',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: ZoneIndicator(),
+                ),
+              ],
+            ),
+          ],
+        );
       },
     );
   }
