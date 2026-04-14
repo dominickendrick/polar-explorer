@@ -55,9 +55,6 @@ class _DeviceSelectorState extends State<DeviceSelector> {
         Text(
           "Connection State: ${vm.connectionState.toString().split('.').last}",
         ),
-        Text(
-          "Services: ${vm.services.map((s) => s.uuid.toString()).join(', ')}",
-        ),
       ],
     );
   }
