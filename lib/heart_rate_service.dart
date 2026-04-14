@@ -84,7 +84,7 @@ class _HeartRateServiceState extends State<HeartRateService> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 SizedBox(
-                  width: 40,
+                  width: 50,
                   child: Text(
                     displayValue,
                     style: const TextStyle(
@@ -103,9 +103,7 @@ class _HeartRateServiceState extends State<HeartRateService> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
-                  child: ZoneIndicator(),
-                ),
+                Expanded(child: ZoneIndicator(heartRate: heartRate)),
               ],
             ),
           ],
