@@ -8,6 +8,7 @@ class ZoneIndicator extends StatelessWidget {
     return Row(
       children: [
         Expanded(
+          flex: 1,
           child: Container(
             height: 8,
             decoration: BoxDecoration(
@@ -18,6 +19,7 @@ class ZoneIndicator extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         Expanded(
+          flex: 2,
           child: Container(
             height: 8,
             decoration: BoxDecoration(
@@ -28,6 +30,7 @@ class ZoneIndicator extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         Expanded(
+          flex: 2,
           child: Container(
             height: 8,
             decoration: BoxDecoration(
