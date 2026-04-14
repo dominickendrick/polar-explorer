@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:polar_explorer/heart_rate_service.dart';
 
+import 'connection_state_card.dart';
+
 import 'device_selector.dart';
 import 'error_banner.dart';
 import 'home_screen_view_model.dart';
@@ -136,24 +138,39 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               )
             else ...[
-              switch (_viewModel.appConnectionState) {
-                AppConnectionState.bluetoothOff => BluetoothAdapterStatus(
-                  onStateChanged: _viewModel.updateBluetoothState,
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    switch (_viewModel.appConnectionState) {
+                      AppConnectionState.bluetoothOff => ConnectionStateCard(
+                        child: BluetoothAdapterStatus(
+                          onStateChanged: _viewModel.updateBluetoothState,
+                        ),
+                      ),
+                      AppConnectionState.scanningForDevices =>
+                        ConnectionStateCard(
+                          child: DeviceSelector(
+                            viewModel: _viewModel.deviceSelectorViewModel,
+                            onDeviceSelected: _viewModel.selectDevice,
+                          ),
+                        ),
+                      AppConnectionState.deviceSelectedNotConnected =>
+                        ConnectionStateCard(
+                          child: DeviceSelector(
+                            viewModel: _viewModel.deviceSelectorViewModel,
+                            onDeviceSelected: _viewModel.selectDevice,
+                          ),
+                        ),
+                      AppConnectionState.heartRateServiceAvailable =>
+                        HeartRateService(
+                          heartRateService: _viewModel.heartRateData,
+                          connectionState: _viewModel.connectionState,
+                        ),
+                    },
+                  ],
                 ),
-                AppConnectionState.scanningForDevices => DeviceSelector(
-                  viewModel: _viewModel.deviceSelectorViewModel,
-                  onDeviceSelected: _viewModel.selectDevice,
-                ),
-                AppConnectionState.deviceSelectedNotConnected => DeviceSelector(
-                  viewModel: _viewModel.deviceSelectorViewModel,
-                  onDeviceSelected: _viewModel.selectDevice,
-                ),
-                AppConnectionState.heartRateServiceAvailable =>
-                  HeartRateService(
-                    heartRateService: _viewModel.heartRateData,
-                    connectionState: _viewModel.connectionState,
-                  ),
-              },
+              ),
             ],
           ];
           return Center(
