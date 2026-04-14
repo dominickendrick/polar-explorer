@@ -49,11 +49,8 @@ class _DeviceSelectorState extends State<DeviceSelector> {
     final vm = widget.viewModel;
     return Column(
       children: [
-        Text("Selected Device:"),
-        Text(vm.selectedDevice!.deviceName),
-        Text(vm.selectedDevice!.deviceId),
         Text(
-          "Connection State: ${vm.connectionState.toString().split('.').last}",
+          "Connecting to ${_parseDeviceName(vm.selectedDevice!.deviceName)}...",
         ),
       ],
     );
@@ -63,12 +60,8 @@ class _DeviceSelectorState extends State<DeviceSelector> {
     final results = widget.viewModel.scanResults;
     return Column(
       children: results.map((r) {
-        final nameParts = r.device.platformName.split(' ');
-        final displayName = nameParts.length >= 2
-            ? '${nameParts[0]} ${nameParts[1]}'
-            : r.device.platformName;
         return ListTile(
-          title: Text(displayName),
+          title: Text(_parseDeviceName(r.device.platformName)),
           subtitle: Text("Polar device found - tap to connect"),
           onTap: () {
             widget.viewModel.selectDevice(r);
@@ -77,5 +70,12 @@ class _DeviceSelectorState extends State<DeviceSelector> {
         );
       }).toList(),
     );
+  }
+
+  String _parseDeviceName(String platformName) {
+    final nameParts = platformName.split(' ');
+    return nameParts.length >= 2
+        ? '${nameParts[0]} ${nameParts[1]}'
+        : platformName;
   }
 }
