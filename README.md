@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/dc49641e-7f7c-4047-8f14-f05aa35690d1
+
 # Polar Explorer
 
 A Flutter application for connecting to Polar heart rate monitors and tracking real-time heart rate data.
@@ -11,13 +15,12 @@ A Flutter application for connecting to Polar heart rate monitors and tracking r
   - Active (60-80 bpm)
   - Exertion (> 80 bpm)
 - **Visual Zone Indicator** - Dynamic progress bar with position marker that moves based on current heart rate
-- **Dark Theme UI** - Modern dark-themed interface optimized for fitness tracking
 
 ## Requirements
 
 - Flutter SDK
 - iOS or Android device with Bluetooth support
-- Polar heart rate monitor (or compatible Bluetooth heart rate device)
+- Polar heart rate monitor
 
 ## Getting Started
 
