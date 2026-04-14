@@ -6,6 +6,7 @@ import 'connection_state_card.dart';
 
 import 'device_selector.dart';
 import 'error_banner.dart';
+import 'heart_rate_service_card.dart';
 import 'home_screen_view_model.dart';
 
 class BluetoothAdapterStatus extends StatelessWidget {
@@ -163,9 +164,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       AppConnectionState.heartRateServiceAvailable =>
-                        HeartRateService(
-                          heartRateService: _viewModel.heartRateData,
-                          connectionState: _viewModel.connectionState,
+                        HeartRateServiceCard(
+                          child: HeartRateService(
+                            heartRateService: _viewModel.heartRateData,
+                            connectionState: _viewModel.connectionState,
+                          ),
                         ),
                     },
                   ],
