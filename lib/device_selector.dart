@@ -63,10 +63,13 @@ class _DeviceSelectorState extends State<DeviceSelector> {
     final results = widget.viewModel.scanResults;
     return Column(
       children: results.map((r) {
+        final nameParts = r.device.platformName.split(' ');
+        final displayName = nameParts.length >= 2
+            ? '${nameParts[0]} ${nameParts[1]}'
+            : r.device.platformName;
         return ListTile(
-          title: Text(r.device.platformName),
-          subtitle: Text(r.device.remoteId.toString()),
-          trailing: Text(r.rssi.toString()),
+          title: Text(displayName),
+          subtitle: Text("Polar device found - tap to connect"),
           onTap: () {
             widget.viewModel.selectDevice(r);
             widget.onDeviceSelected(widget.viewModel.selectedDevice!);

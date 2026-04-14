@@ -11,7 +11,7 @@ class ConnectionStateCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color.fromRGBO(7, 10, 33, 1.0),
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: child,
     );
