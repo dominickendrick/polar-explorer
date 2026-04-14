@@ -1,17 +1,30 @@
-# polar_explorer
+# Polar Explorer
 
-A new Flutter project.
+A Flutter application for connecting to Polar heart rate monitors and tracking real-time heart rate data.
+
+## Features
+
+- **Bluetooth Device Scanning** - Automatically scans for nearby Polar heart rate devices
+- **Real-time Heart Rate Monitoring** - Displays live heart rate data from connected devices
+- **Heart Rate Zones** - Categorizes heart rate into zones:
+  - Resting (< 60 bpm)
+  - Active (60-80 bpm)
+  - Exertion (> 80 bpm)
+- **Visual Zone Indicator** - Dynamic progress bar with position marker that moves based on current heart rate
+- **Dark Theme UI** - Modern dark-themed interface optimized for fitness tracking
+
+## Requirements
+
+- Flutter SDK
+- iOS or Android device with Bluetooth support
+- Polar heart rate monitor (or compatible Bluetooth heart rate device)
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Clone the repository
+2. Run `flutter pub get` to install dependencies
+3. Connect your device and run `flutter run`
 
-A few resources to get you started if this is your first Flutter project:
+## Permissions
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The app requires Bluetooth permissions to scan for and connect to heart rate devices.

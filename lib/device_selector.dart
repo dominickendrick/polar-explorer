@@ -47,12 +47,8 @@ class _DeviceSelectorState extends State<DeviceSelector> {
 
   Widget _buildSelectedDevice() {
     final vm = widget.viewModel;
-    return Column(
-      children: [
-        Text(
-          "Connecting to ${_parseDeviceName(vm.selectedDevice!.deviceName)}...",
-        ),
-      ],
+    return Text(
+      "Connecting to ${_parseDeviceName(vm.selectedDevice!.deviceName)} ...",
     );
   }
 
