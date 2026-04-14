@@ -3,18 +3,14 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
-enum HeartRateStatus {
-  disconnected,
-  serviceNotFound,
-  monitoring,
-}
+enum HeartRateStatus { disconnected, serviceNotFound, monitoring }
 
 class HeartRateViewModel extends ChangeNotifier {
   int? _heartRate;
   BluetoothConnectionState? _connectionState;
-  BluetoothService? _service;
-  BluetoothCharacteristic? _characteristic;
-  StreamSubscription<List<int>>? _subscription;
+  BluetoothService? _bluetoothPolarService;
+  BluetoothCharacteristic? _bluetoothCharacteristic;
+  StreamSubscription<List<int>>? _heartRateStreamSubscription;
 
   int? get heartRate => _heartRate;
 
@@ -22,7 +18,7 @@ class HeartRateViewModel extends ChangeNotifier {
     if (_connectionState != BluetoothConnectionState.connected) {
       return HeartRateStatus.disconnected;
     }
-    if (_service == null) {
+    if (_bluetoothPolarService == null) {
       return HeartRateStatus.serviceNotFound;
     }
     return HeartRateStatus.monitoring;
@@ -34,9 +30,10 @@ class HeartRateViewModel extends ChangeNotifier {
   }) async {
     _connectionState = connectionState;
 
-    final serviceChanged = service?.serviceUuid != _service?.serviceUuid;
+    final serviceChanged =
+        service?.serviceUuid != _bluetoothPolarService?.serviceUuid;
     if (serviceChanged) {
-      _service = service;
+      _bluetoothPolarService = service;
       await _subscribe(service);
     }
 
@@ -44,32 +41,33 @@ class HeartRateViewModel extends ChangeNotifier {
   }
 
   Future<void> _subscribe(BluetoothService? service) async {
-    _subscription?.cancel();
-    _subscription = null;
-    _characteristic = null;
+    _heartRateStreamSubscription?.cancel();
+    _heartRateStreamSubscription = null;
+    _bluetoothCharacteristic = null;
     _heartRate = null;
 
     if (service == null) return;
 
-    final characteristic = service.characteristics
+    final bluetoothCharacteristic = service.characteristics
         .where((c) => c.uuid.toString().toLowerCase().contains("2a37"))
         .firstOrNull;
-    if (characteristic == null) return;
+    if (bluetoothCharacteristic == null) return;
 
-    await characteristic.setNotifyValue(true);
-    _characteristic = characteristic;
+    await bluetoothCharacteristic.setNotifyValue(true);
+    _bluetoothCharacteristic = bluetoothCharacteristic;
 
-    _subscription = characteristic.lastValueStream.listen((data) {
-      if (data.length >= 2) {
-        _heartRate = _parseHeartRate(data);
-        notifyListeners();
-      }
-    });
+    _heartRateStreamSubscription = bluetoothCharacteristic.lastValueStream
+        .listen((data) {
+          if (data.length >= 2) {
+            _heartRate = _parseHeartRate(data);
+            notifyListeners();
+          }
+        });
   }
 
   @override
   void dispose() {
-    _subscription?.cancel();
+    _heartRateStreamSubscription?.cancel();
     super.dispose();
   }
 }
